@@ -101,7 +101,7 @@ ag.idea().java(runClient) {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId = "$project.name-house"
+            artifactId = "$project.name"
             from components.java
             setArtifacts([]) // overwrite default artifacts
             ag.excludeConfiguration(it, configurations.excluded)
