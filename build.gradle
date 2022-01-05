@@ -1,0 +1,131 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'amalgamation-minecraft' version "1.0.0.0"
+    id 'maven-publish'
+
+}
+
+group 'org.example'
+version '1.0.0'
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://maven.fabricmc.net/'
+    }
+}
+
+def intermediate = ag.map {
+    mappings(ag.intermediary(minecraft_version))
+    inputGlobal(ag.mojmerged(minecraft_version))
+}
+
+def map = "net.fabricmc:yarn:${yarn_mappings}:v2"
+def mappedMc
+//def fapi
+//def rei
+def floader = ag.fabricLoader(loader_version)
+ag.map {
+    mappings(map, 'intermediary', 'named')
+    mappedMc = inputGlobal(intermediate)
+    //fapi = inputLocal("net.fabricmc.fabric-api:fabric-api:${fabric_version}") {exclude module: 'fabric-loader'}
+    //rei = inputLocal("me.shedaniel:RoughlyEnoughItems-fabric:7.0.346") {exclude group: "net.fabricmc.fabric-api"exclude module: 'fabric-loader'}
+}
+
+configurations {
+    excluded {}
+    implementation.extendsFrom(excluded)
+}
+
+sourceSets {
+    test {
+        compileClasspath += main.output + main.compileClasspath
+        runtimeClasspath += main.compileClasspath
+    }
+}
+
+dependencies {
+    excluded mappedMc
+    // implementation fapi
+    // implementation rei
+    excluded ag.libraries(minecraft_version)
+    excluded floader
+    excluded map
+}
+
+jar {
+    from "$rootProject.projectDir/LICENSE"
+}
+
+
+task remapJar(type: RemapJar) {
+    group = "build"
+    with jar
+    classpath = sourceSets.main.compileClasspath
+    remapAw()
+    enableExperimentalMixinRemapper()
+    mappings(map, 'named', 'intermediary')
+}
+
+task remapSourcesJar(type: RemapSourcesJar) {
+    group = "build"
+    classifier = 'sources'
+    from sourceSets.main.allSource
+    classpath = sourceSets.main.compileClasspath
+    mappings(map, 'named', 'intermediary')
+}
+
+task runClient(type: JavaExec) {
+    group = "Minecraft"
+    description = "runs minecraft"
+    classpath sourceSets.main.runtimeClasspath
+    main = "net.fabricmc.loader.launch.knot.KnotClient"
+    def natives = ag.natives(minecraft_version)
+    systemProperty("fabric.development", true)
+    systemProperty("fabric.gameVersion", minecraft_version)
+    systemProperty("java.library.globalCache", natives)
+    systemProperty("org.lwjgl.librarypath", natives)
+    def assets = ag.assets(minecraft_version)
+    args("--assetIndex", assets.getAssetIndex(), "--assetsDir", assets.getAssetsDir())
+    workingDir("$rootDir/run")
+    dependsOn tasks.classes
+}
+
+ag.idea().java(runClient) {
+    it.setJvmVersion("17")
+    it.overrideClasspath(project, sourceSets.main)
+    it.excludeDependency(tasks.classes)
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = "$project.name-house"
+            from components.java
+            setArtifacts([]) // overwrite default artifacts
+            ag.excludeConfiguration(it, configurations.excluded)
+            ag.fixPom(it)
+            artifact(remapJar) {
+                builtBy remapJar
+            }
+
+            artifact(remapSourcesJar) {
+                builtBy remapSourcesJar
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            def mavenUrl = project.hasProperty('maven_url') ? project.property('maven_url') : ""
+            url mavenUrl
+            if (mavenUrl.startsWith("http")) {
+                credentials {
+                    username project.hasProperty('maven_username') ? project.property('maven_username') : ""
+                    password project.hasProperty('maven_password') ? project.property('maven_password') : ""
+                }
+            }
+        }
+    }
+}
