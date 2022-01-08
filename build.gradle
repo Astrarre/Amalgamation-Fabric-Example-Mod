@@ -1,9 +1,8 @@
 plugins {
     id 'java'
     id 'idea'
-    id 'amalgamation-minecraft' version "1.0.0.2"
+    id 'amalgamation-minecraft' version "1.0.0.3"
     id 'maven-publish'
-
 }
 
 group 'org.example'
