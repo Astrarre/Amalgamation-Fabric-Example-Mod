@@ -64,7 +64,7 @@ task remapJar(type: RemapJar) {
     with jar
     classpath = sourceSets.main.compileClasspath
     remapAw()
-    enableExperimentalMixinRemapper()
+    useExperimentalMixinRemapper()
     mappings(map, 'named', 'intermediary')
 }
 
