@@ -1,8 +1,9 @@
 plugins {
     id 'java'
     id 'idea'
-    id 'amalgamation-minecraft' version "1.0.0.3"
+    id 'amalgamation-minecraft' version "1.0.1.0"
     id 'maven-publish'
+
 }
 
 group 'org.example'
@@ -22,13 +23,13 @@ def intermediate = ag.map {
 
 def map = "net.fabricmc:yarn:${yarn_mappings}:v2"
 def mappedMc
-//def fapi
+def fapi
 //def rei
 def floader = ag.fabricLoader(loader_version)
 ag.map {
     mappings(map, 'intermediary', 'named')
     mappedMc = inputGlobal(intermediate)
-    //fapi = inputLocal("net.fabricmc.fabric-api:fabric-api:${fabric_version}") {exclude module: 'fabric-loader'}
+    fapi = inputLocal("net.fabricmc.fabric-api:fabric-api:${fabric_version}") {exclude module: 'fabric-loader'}
     //rei = inputLocal("me.shedaniel:RoughlyEnoughItems-fabric:7.0.346") {exclude group: "net.fabricmc.fabric-api"exclude module: 'fabric-loader'}
 }
 
@@ -46,7 +47,7 @@ sourceSets {
 
 dependencies {
     excluded mappedMc
-    // implementation fapi
+    implementation fapi
     // implementation rei
     excluded ag.libraries(minecraft_version)
     excluded floader

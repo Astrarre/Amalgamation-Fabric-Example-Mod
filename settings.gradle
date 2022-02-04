@@ -18,6 +18,7 @@ pluginManagement {
                 includeGroup "io.github.astrarre"
                 includeGroup "io.github.astrarre.amalgamation"
                 includeGroup "amalgamation-minecraft"
+		        includeGroup "net.fabricmc"
             }
         }
         maven {
@@ -29,3 +30,4 @@ pluginManagement {
     }
 }
 rootProject.name = 'testmod'
+
